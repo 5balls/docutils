@@ -225,7 +225,8 @@ class Raw(Directive):
     option_spec = {'file': directives.path,
                    'url': directives.uri,
                    'encoding': directives.encoding,
-                   'class': directives.class_option}
+                   'class': directives.class_option,
+                   'position': directives.unchanged}
     has_content = True
 
     def run(self):
@@ -294,6 +295,8 @@ class Raw(Directive):
         else:
             # This will always fail because there is no content.
             self.assert_has_content()
+        if 'position' in self.options:
+            attributes['position'] = self.options['position']
         raw_node = nodes.raw('', text, classes=self.options.get('class', []),
                              **attributes)
         (raw_node.source,
