@@ -1946,6 +1946,7 @@ node_class_names = """
     image important inline
     label legend line line_block list_item literal literal_block
     math math_block meta
+    navigation
     note
     option option_argument option_group option_list option_list_item
         option_string organization

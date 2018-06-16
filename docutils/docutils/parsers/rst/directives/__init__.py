@@ -65,6 +65,7 @@ _directive_registry = {
       'title': ('misc', 'Title'),
       'date': ('misc', 'Date'),
       'form': ('form', 'Form'),
+      'navigation': ('navigation', 'Navigation'),
       'restructuredtext-test-directive': ('misc', 'TestDirective'),
       }
 """Mapping of directive name to (module name, class name).  The
