@@ -52,5 +52,5 @@ class Form(Directive):
         if 'phpmode' not in node:
             node['phpmode'] = 'off'
         self.state.nested_parse(self.content, self.content_offset, node)
-	return [node]
+        return [node]
 

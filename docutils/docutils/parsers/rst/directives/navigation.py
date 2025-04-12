@@ -50,7 +50,9 @@ class Navigation(Directive):
         source_base_dir = os.path.abspath(self.options['base'])
         own_rel_path, own_filename = os.path.split(self.state_machine.document.current_source)
         own_abs_path = os.path.join(os.getcwd(), own_rel_path)
+        os.write(2, ("own_abs_path %s\n" % own_abs_path).encode("utf-8"))
         own_nav_dir = os.path.relpath(own_abs_path, source_base_dir)
+        os.write(2, ("source_base_dir %s own_nav_dir %s\n" % (source_base_dir, own_nav_dir)).encode("utf-8"))
         cur_bullet_list_node = bullet_list()
         cur_bullet_list_node['bullet'] = '-'
         cur_nav_element = cur_bullet_list_node
@@ -73,10 +75,9 @@ class Navigation(Directive):
             node['language'] = 'de'
 
         if Navigation.call_depth > 1:
-            os.write(2, "Skip parsing for recursive calls...\n")
+            os.write(2, ("Skip parsing for recursive calls...\n").encode("utf-8"))
             return [node]
 
-        node.append(cur_bullet_list_node)
         for dirpath, dirnames, filenames in os.walk(source_base_dir):
             for dirname in dirnames:
                 if '.git' in dirname:
@@ -84,10 +85,10 @@ class Navigation(Directive):
                 cur_path = os.path.join(dirpath, dirname)
                 if '.git' in cur_path:
                     continue
-                os.write(2, "%s %s\n" % (cur_path, filenames))
+                os.write(2, ("%s %s\n" % (cur_path, filenames)).encode("utf-8"))
                 self.new_depth = cur_path.count(os.sep)-source_base_dir.count(os.sep)
                 if(self.new_depth > self.old_depth):
-                    os.write(2, "+\n")
+                    os.write(2, ("+\n").encode("utf-8"))
                     last_nav_element = cur_nav_element
                     if cur_class is not None:
                         cur_bullet_list_node['classes'] = cur_class
@@ -110,9 +111,9 @@ class Navigation(Directive):
                 (_,_,real_filenames) = next(os.walk(os.path.join(dirpath, dirname)))
                 for filename in real_filenames:
                     if (filename[:-2] + node['language'] in real_filenames and filename[-2:] != node['language']):
-                        os.write(2,'nok %i %i %s %s %s %s %s %s\n' % (self.new_depth, self.old_depth, filename[:-2] + node['language'], real_filenames, node['language'], filename[-2:], filename, map(lambda x: x.astext(), list(filter(lambda x: x is not None, nav_elements)))))
+                        os.write(2,('nok %i %i %s %s %s %s %s %s\n' % (self.new_depth, self.old_depth, filename[:-2] + node['language'], real_filenames, node['language'], filename[-2:], filename, map(lambda x: x.astext(), list(filter(lambda x: x is not None, nav_elements))))).encode("utf-8"))
                         continue
-                    os.write(2,'%i ok %i %i %s %s %s %s %s %s\n' % (Navigation.call_depth, self.new_depth, self.old_depth, filename[:-2] + node['language'], real_filenames, node['language'], filename[-2:], filename, map(lambda x: x.astext(), list(filter(lambda x: x is not None, nav_elements)))))
+                    os.write(2,('%i ok %i %i %s %s %s %s %s %s\n' % (Navigation.call_depth, self.new_depth, self.old_depth, filename[:-2] + node['language'], real_filenames, node['language'], filename[-2:], filename, map(lambda x: x.astext(), list(filter(lambda x: x is not None, nav_elements))))).encode("utf-8"))
                     cur_file = io.open(os.path.join(dirpath, dirname, filename), mode='r', encoding='utf-8')
                     cur_file_rst_content = cur_file.read()
                     cur_file_doc_tree = publish_doctree(cur_file_rst_content, settings_overrides={'input_encoding': 'unicode'})
@@ -147,4 +148,5 @@ class Navigation(Directive):
         if cur_class is not None:
             cur_bullet_list_node['classes'] = cur_class
         Navigation.call_depth = Navigation.call_depth - 1
+        node.append(cur_bullet_list_node)
         return [node]

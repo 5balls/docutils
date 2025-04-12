@@ -387,7 +387,7 @@ class HTMLTranslator(nodes.NodeVisitor):
             compose_string = ''
             # We have two capture groups, so every third item is a
             # match:
-            for matchindex in range(0,(len(split)-(len(split)%3))/3):
+            for matchindex in range(0,(len(split)-(len(split)%3))//3):
                 stext = split[3*matchindex]
                 cg1 = split[3*matchindex + 1]
                 cg2 = split[3*matchindex + 2]
@@ -503,8 +503,11 @@ class HTMLTranslator(nodes.NodeVisitor):
                 parts.append('%s="%s"' % (name.lower(),
                                           self.attval(' '.join(values))))
             else:
-                parts.append('%s="%s"' % (name.lower(),
-                                          self.attval(str(value))))
+                if value is not '':
+                    parts.append('%s="%s"' % (name.lower(),
+                                              self.attval(str(value))))
+                else:
+                    parts.append('%s' % (name.lower()))
         if empty:
             infix = ' /'
         else:
@@ -1773,7 +1776,7 @@ class HTMLTranslator(nodes.NodeVisitor):
         node_namesplit = re.split('\[', string, 1)
         node_name = node_namesplit[0]
         if len(node_namesplit) == 2:
-            node_nameindex = '[' + node_namesplit[1]
+            node_nameindex = "['" + node_namesplit[1][:-1] + "']"
         else:
             node_nameindex = ''
         return [node_name, node_nameindex]
@@ -1825,18 +1828,26 @@ class HTMLTranslator(nodes.NodeVisitor):
         phpmode = form_node['phpmode']
         phpvar = self.form_php_get_phpvar(form_node)
         node_name, node_nameindex = self.form_php_array_split(node[nameattr])
-        if checkedattr in node:
+        if 'checked' in node:
+            node_checked = node['checked']
+        else:
+            if 'checkedattr' in node:
+                node_checked = node['checkedattr']
+            else:
+                node_checked = ''
+        if 'valueattr' in node:
+            node_value = node['valueattr']
+        else:
+            node_value = 'debug'
 # PHP disabled here , because it is broken right now (because of weird
 # html compability quirks with checked attribute - have to do this
 # different)
-#            if phpmode == 'checkandembedvalue':
-#                return "<?php if(" + phpvar + "['" + node_name + "']){if(strcmp(" + phpvar + "['" + node_name + "']" + node_nameindex + ",'" + node[valueattr] + "')==0) echo 'checked';} else echo '" + node[checkedattr] + "'; ?>"
-#            if phpmode == 'embedvalue':
-#                return "<?php if(strcmp(" + phpvar + "['" + node_name + "']" + node_nameindex + ",'" + node[valueattr] + "')==0) echo 'checked'; ?>"
-#            else:
-            return node[checkedattr]
+        if phpmode == 'checkandembedvalue':
+            return "<?php if(isset(" + phpvar + "['" + node_name + "']" + node_nameindex + ")) { echo 'checked';} else echo '" + node_checked + "'; ?>"
+        if phpmode == 'embedvalue':
+            return "<?php if(strcmp(" + phpvar + "['" + node_name + "']" + node_nameindex + ",'" + node_value + "')==0) echo 'checked'; ?>"
         else:
-            return ''
+            return node_checked
 
     def visit_form(self, node):
         atts = {}
@@ -1866,7 +1877,7 @@ class HTMLTranslator(nodes.NodeVisitor):
             if node['type'] == 'checkbox' or node['type'] == 'radio':
                 checked_value = self.form_php_checked(node, 'name', 'value', 'checked')
                 if checked_value != '':
-                    atts['checked'] = checked_value
+                    atts[checked_value] = ''
         self.body.append(
             self.starttag(node, 'input', '', **atts))
 
